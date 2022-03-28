@@ -1,26 +1,46 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react"
+import { DragDropContext, DropResult } from "react-beautiful-dnd"
+import "./App.css"
+import InputField from "./components/InputField"
+import TodoList from "./components/TodoList"
+import { initialState } from "./utils/models"
+import { addTodo, Context, doneTodo, reducer } from "./utils/reducer"
 
-function App() {
+const App: React.FC = () => {
+  const [todo, setTodo] = React.useState<string>("")
+  const [state, dispatch] = React.useReducer(reducer, initialState)
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault()
+
+    if (todo) {
+      dispatch(addTodo(todo))
+      setTodo("")
+    }
+  }
+
+  function handleDragEnd(result: DropResult) {
+    const { source, destination } = result
+
+    if (!destination) return
+    if (destination.droppableId === source.droppableId) return
+
+    dispatch(doneTodo(parseInt(result.draggableId, 10)))
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <>
+      <Context.Provider value={{ state, dispatch }}>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="App">
+            <span className="heading">Taskify</span>
+            <InputField todo={todo} setTodo={setTodo} handleAdd={handleAdd} />
+            <TodoList />
+          </div>
+        </DragDropContext>
+      </Context.Provider>
+    </>
+  )
 }
 
-export default App;
+export default App
